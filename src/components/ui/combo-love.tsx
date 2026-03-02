@@ -26,7 +26,7 @@ const comboItems = [
   },
   {
     serviceId: "popular-3",
-    image: "/combo/các combo-06.png",
+    image: "/combo/combo-06.png",
     title: "Sạch sâu + Cấp ẩm + Săn chắc",
     description: "Làm sạch, nâng cơ nhẹ và phục hồi đàn hồi",
     foxiePrice: 579000,
@@ -35,7 +35,7 @@ const comboItems = [
   },
   {
     serviceId: "popular-4",
-    image: "/combo/các combo-07 (1).png",
+    image: "/combo/combo-07.png",
     title: "Sạch sâu + Săn chắc + Chăm sóc mắt + Sáng da",
     description: "Gói chăm sóc toàn diện và trẻ hóa",
     foxiePrice: 769000,
