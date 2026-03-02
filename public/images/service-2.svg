@@ -1,0 +1,8 @@
+<svg width="900" height="1200" viewBox="0 0 900 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="900" height="1200" fill="#EDEEF1"/>
+<circle cx="470" cy="500" r="180" fill="#F1C8AA"/>
+<rect x="140" y="700" width="620" height="280" rx="42" fill="#F18453"/>
+<rect x="170" y="180" width="560" height="160" rx="80" fill="#A5C7E4"/>
+<text x="450" y="283" text-anchor="middle" fill="#102A43" font-family="Arial" font-size="50" font-weight="700">BRAND AMBASSADOR</text>
+<path d="M205 665C286 604 376 572 480 581C562 588 645 629 698 690" stroke="#515B66" stroke-width="22" stroke-linecap="round"/>
+</svg>
