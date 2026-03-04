@@ -14,7 +14,18 @@ import useSharedCart, { type SharedCartItem } from "./hooks/use-shared-cart"
 const PRICE_MENU_PDF = "/menu/bang-gia-tong-a4-ver-4.pdf"
 const MENU_TARGET_TITLE = "Bảng Giá Dịch Vụ Nhà Fox"
 const FOXIE_TARGET_TITLE = "Thẻ Thành Viên Foxie"
-const SERVICE_GROUPS = [
+
+type ServiceOption = {
+    id: string
+    name: string
+    price: number
+    subtitle?: string
+    listedPrice?: number
+    compareAtPrice?: number
+    duration?: string
+}
+
+const SERVICE_GROUPS: Array<{ id: string; title: string; items: ServiceOption[] }> = [
     {
         id: "popular-combo",
         title: "Combo được ưa chuộng nhất",
@@ -46,35 +57,80 @@ const SERVICE_GROUPS = [
         id: "extra-services",
         title: "Dịch vụ cộng thêm",
         items: [
-            { id: "extra-1", name: "Cryo", price: 599000 },
-            { id: "extra-2", name: "Lumiglow", price: 599000 },
-            { id: "extra-3", name: "Gymming", price: 599000 },
-            { id: "extra-4", name: "Eye-revive", price: 599000 },
-            { id: "extra-5", name: "Neck care", price: 599000 },
-            { id: "extra-6", name: "Acne nose detox", price: 599000 },
+            { id: "extra-1", name: "Cấp ẩm", subtitle: "Cryo", price: 199000, listedPrice: 299000, compareAtPrice: 599000 },
+            { id: "extra-2", name: "Sáng da", subtitle: "Lumiglow", price: 199000, listedPrice: 299000, compareAtPrice: 599000 },
+            { id: "extra-3", name: "Săn chắc da", subtitle: "Gymming", price: 199000, listedPrice: 299000, compareAtPrice: 599000 },
+            { id: "extra-4", name: "Chăm sóc mắt", subtitle: "Eye-revive", price: 199000, listedPrice: 299000, compareAtPrice: 599000 },
+            { id: "extra-5", name: "Chăm sóc cổ", subtitle: "Neck care", price: 199000, listedPrice: 299000, compareAtPrice: 599000 },
+            { id: "extra-6", name: "Sạch sâu vùng mũi", subtitle: "Acne Nose Detox", price: 199000, listedPrice: 299000, compareAtPrice: 599000 },
         ],
     },
     {
         id: "basic-services",
         title: "Dịch vụ cơ bản",
         items: [
-            { id: "basic-1", name: "Glowrex Brightening Therapy", price: 299000 },
-            { id: "basic-2", name: "Revital Boost Therapy", price: 349000 },
-            { id: "basic-3", name: "Acne Rescue Therapy", price: 329000 },
-            { id: "basic-4", name: "PDRN Recovery Therapy", price: 399000 },
+            {
+                id: "basic-1",
+                name: "Rửa mặt công nghệ Hydra Facial",
+                subtitle: "Aqua Peel Cleanse",
+                duration: "30 phút",
+                price: 199000,
+                listedPrice: 299000,
+                compareAtPrice: 599000,
+            },
+            {
+                id: "basic-2",
+                name: "Làm sạch sâu và cải thiện lỗ chân lông",
+                subtitle: "Deep Cleanse",
+                duration: "40 phút",
+                price: 339000,
+                listedPrice: 489000,
+                compareAtPrice: 999000,
+            },
+            {
+                id: "basic-3",
+                name: "Cấp ẩm, căng bóng và tràn đầy sức sống",
+                subtitle: "Cryo Cleanse",
+                duration: "40 phút",
+                price: 349000,
+                listedPrice: 519000,
+                compareAtPrice: 1299000,
+            },
+            {
+                id: "basic-4",
+                name: "Làm sáng và cải thiện màu da, giảm đốm nâu",
+                subtitle: "Lumiglow Cleanse",
+                duration: "40 phút",
+                price: 349000,
+                listedPrice: 519000,
+                compareAtPrice: 1299000,
+            },
+            {
+                id: "basic-5",
+                name: "Làm tăng đàn hồi, săn chắc và thư giãn da",
+                subtitle: "Gymming Cleanse",
+                duration: "40 phút",
+                price: 349000,
+                listedPrice: 519000,
+                compareAtPrice: 1299000,
+            },
+            {
+                id: "basic-6",
+                name: "Chăm sóc da mắt và làm giảm nếp nhăn mắt",
+                subtitle: "Eye-revive Cleanse",
+                duration: "40 phút",
+                price: 349000,
+                listedPrice: 519000,
+                compareAtPrice: 999000,
+            },
         ],
     },
 ]
 const SERVICE_OPTIONS = SERVICE_GROUPS.flatMap((group) => group.items)
+const EXTRA_SERVICES = SERVICE_GROUPS.find((group) => group.id === "extra-services")?.items ?? []
+const BASIC_SERVICES = SERVICE_GROUPS.find((group) => group.id === "basic-services")?.items ?? []
 const formatVnd = (value: number) =>
     new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value)
-
-const CLOSED_SERVICE_GROUPS: Record<string, boolean> = {
-    "popular-combo": false,
-    "deep-combo": false,
-    "extra-services": false,
-    "basic-services": false,
-}
 
 export default function ClipsPage() {
     const [newProjects, setNewProjects] = useState<(Project & { isNew?: boolean; isVisible?: boolean })[]>([])
@@ -83,9 +139,6 @@ export default function ClipsPage() {
     const mainRef = useRef<HTMLElement>(null)
     const [activeModal, setActiveModal] = useState<"menu" | "foxie" | null>(null)
     const [isCartOpen, setIsCartOpen] = useState(false)
-    const [serviceQuantities, setServiceQuantities] = useState<Record<string, number>>({})
-    const [openServiceGroups, setOpenServiceGroups] =
-        useState<Record<string, boolean>>(CLOSED_SERVICE_GROUPS)
     const { cartItems, customerPhone, setCustomerPhone, addItem, changeQuantity, removeItem } = useSharedCart()
     const [isCommingSoonOpen, setIsCommingSoonOpen] = useState(false)
 
@@ -124,7 +177,6 @@ export default function ClipsPage() {
     const handleFolderClick = useCallback((project: Project) => {
         if (project.title === MENU_TARGET_TITLE) {
             setActiveModal("menu")
-            setOpenServiceGroups(CLOSED_SERVICE_GROUPS)
         }
         if (project.title === FOXIE_TARGET_TITLE) {
             setActiveModal("foxie")
@@ -146,35 +198,17 @@ export default function ClipsPage() {
         setIsCartOpen(true)
     }, [addItem])
 
-    const updateServiceQuantity = (id: string, delta: number) => {
-        setServiceQuantities((prev) => {
-            const current = prev[id] ?? 1
-            return {
-                ...prev,
-                [id]: Math.max(1, current + delta),
-            }
-        })
-    }
-
     const addServiceToCart = (id: string) => {
         const service = SERVICE_OPTIONS.find((option) => option.id === id)
         if (!service) return
 
-        const quantity = serviceQuantities[id] ?? 1
         addToCart({
             id: `service-${service.id}`,
             name: service.name,
             price: service.price,
-            quantity,
+            quantity: 1,
             type: "service",
         })
-    }
-
-    const toggleServiceGroup = (groupId: string) => {
-        setOpenServiceGroups((prev) => ({
-            ...prev,
-            [groupId]: !prev[groupId],
-        }))
     }
 
     const handleAddVoucherToCart = (item: VoucherDetail) => {
@@ -356,81 +390,138 @@ export default function ClipsPage() {
                             />
                         </div>
 
-                        <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden p-5 text-white md:p-6">
-                            <h2 className="pr-16 text-xl font-bold">Chọn dịch vụ</h2>
-                            <p className="text-sm text-white/70">
-                                Xem đầy đủ bảng giá bên trái, chọn số lượng và thêm vào giỏ hàng.
-                            </p>
+                        <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden bg-[#f7931a] p-5 text-[#1d1d1d] md:p-6">
+                            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pb-2 pr-1">
+                                <section className="space-y-3">
+                                    <h2 className="text-2xl font-extrabold uppercase leading-none tracking-tight text-white">
+                                        Dịch vụ cộng thêm
+                                        <span className="ml-2 align-middle text-lg font-medium normal-case text-white/90">
+                                            Additional Services
+                                        </span>
+                                    </h2>
 
-                            <div className="mt-1 min-h-0 flex-1 space-y-3 overflow-y-auto pb-2 pr-1">
-                                {SERVICE_GROUPS.map((group) => (
-                                    <div key={group.id} className="space-y-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => toggleServiceGroup(group.id)}
-                                            className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-left"
-                                        >
-                                            <span className="text-sm font-semibold uppercase tracking-wide text-white/85">
-                                                {group.title}
-                                            </span>
-                                            <span
-                                                className={`text-sm text-white/70 transition-transform ${
-                                                    openServiceGroups[group.id] ? "rotate-180" : ""
-                                                }`}
-                                            >
-                                                ▼
-                                            </span>
-                                        </button>
-
-                                        {openServiceGroups[group.id] ? (
-                                            <div className="space-y-3">
-                                                {group.items.map((option) => (
-                                                    <div
-                                                        key={option.id}
-                                                        className="rounded-lg border border-white/10 bg-white/5 px-4 py-3"
-                                                    >
-                                                        <div className="mb-3 flex items-center justify-between gap-3">
-                                                            <span className="text-sm">{option.name}</span>
-                                                            <span className="text-sm font-semibold text-[#ffb699]">
-                                                                {formatVnd(option.price)}
-                                                            </span>
+                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                                        {EXTRA_SERVICES.map((option) => (
+                                            <article key={option.id} className="rounded-2xl bg-[#ececec] px-3 py-3 shadow-sm">
+                                                <p className="text-xl font-extrabold leading-none">{option.name}</p>
+                                                <p className="mt-1 text-sm text-black/70">{option.subtitle}</p>
+                                                <div className="mt-2 border-t border-black/50 pt-2">
+                                                    <div className="mb-1 text-right">
+                                                        <span className="text-[15px] font-bold text-[#d4866d] line-through">
+                                                            {option.compareAtPrice ? formatVnd(option.compareAtPrice) : ""}
+                                                        </span>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div>
+                                                            <p className="text-sm font-bold leading-tight">Giá thẻ Foxie</p>
+                                                            <p className="text-[11px] text-black/70">Foxie Card&apos;s point</p>
+                                                            <p className="mt-1 text-[33px] leading-none font-extrabold text-[#14b6bf] sm:text-[28px]">
+                                                                {formatVnd(option.price).replace("₫", "đ")}
+                                                            </p>
                                                         </div>
-
-                                                        <div className="flex items-center justify-between gap-3">
-                                                            <div className="flex items-center gap-2 rounded-full bg-white/10 px-2 py-1">
-                                                                <button
-                                                                    type="button"
-                                                                    className="h-7 w-7 rounded-full bg-white/10 text-sm"
-                                                                    onClick={() => updateServiceQuantity(option.id, -1)}
-                                                                >
-                                                                    -
-                                                                </button>
-                                                                <span className="min-w-6 text-center text-sm">
-                                                                    {serviceQuantities[option.id] ?? 1}
-                                                                </span>
-                                                                <button
-                                                                    type="button"
-                                                                    className="h-7 w-7 rounded-full bg-white/10 text-sm"
-                                                                    onClick={() => updateServiceQuantity(option.id, 1)}
-                                                                >
-                                                                    +
-                                                                </button>
-                                                            </div>
-
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => addServiceToCart(option.id)}
-                                                                className="rounded-lg bg-[#ff6a36] px-4 py-2 text-xs font-semibold text-white hover:bg-[#f45c28]"
-                                                            >
-                                                                Thêm vào giỏ
-                                                            </button>
+                                                        <div className="text-right">
+                                                            <p className="text-sm font-bold leading-tight">Giá niêm yết</p>
+                                                            <p className="text-[11px] text-black/70">Listed price</p>
+                                                            <p className="mt-1 text-[33px] leading-none font-extrabold text-[#f7941d] sm:text-[28px]">
+                                                                {option.listedPrice ? formatVnd(option.listedPrice).replace("₫", "đ") : ""}
+                                                            </p>
                                                         </div>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        ) : null}
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => addServiceToCart(option.id)}
+                                                    className="mt-2 w-full rounded-lg bg-[#ff6a36] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#f45c28]"
+                                                >
+                                                    Thêm vào giỏ
+                                                </button>
+                                            </article>
+                                        ))}
                                     </div>
-                                ))}
+                                </section>
+
+                                <section className="space-y-3">
+                                    <h2 className="text-2xl font-extrabold uppercase leading-none tracking-tight text-white">
+                                        Dịch vụ cơ bản
+                                        <span className="ml-2 align-middle text-lg font-medium normal-case text-white/90">
+                                            Services
+                                        </span>
+                                    </h2>
+
+                                    <div className="overflow-hidden rounded-[20px] bg-[#ececec]">
+                                        <div className="grid grid-cols-[1.4fr_0.7fr_0.7fr] gap-2 border-b border-black/15 px-4 py-3 text-black">
+                                            <div>
+                                                <p className="text-[22px] font-bold leading-tight">Dịch vụ cơ bản</p>
+                                                <p className="text-[18px] leading-none text-black/85">Services</p>
+                                            </div>
+                                            <div className="border-l border-black/35 pl-3 text-center">
+                                                <p className="text-[22px] font-bold leading-tight">Thời gian</p>
+                                                <p className="text-[18px] leading-none text-black/85">Time</p>
+                                            </div>
+                                            <div className="border-l border-black/35 pl-3">
+                                                <div className="grid grid-cols-2">
+                                                    <div className="pr-2 text-center">
+                                                        <p className="text-[22px] font-bold leading-tight">Giá thẻ Foxie</p>
+                                                        <p className="text-[18px] leading-none text-black/85">Foxie Card&apos;s point</p>
+                                                    </div>
+                                                    <div className="border-l border-black/35 pl-2 text-center">
+                                                        <p className="text-[22px] font-bold leading-tight">Giá niêm yết</p>
+                                                        <p className="text-[18px] leading-none text-black/85">Listed price</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 bg-[#f7931a] px-1 py-2">
+                                            {BASIC_SERVICES.map((option, index) => (
+                                                <article key={option.id} className="grid grid-cols-[58px_1.4fr_0.7fr_0.7fr] items-stretch rounded-[18px] bg-[#ececec] text-black">
+                                                    <div className="grid place-items-center border-r-4 border-[#f7931a] text-[46px] font-extrabold leading-none text-[#f7931a]">
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="px-3 py-2">
+                                                        <div className="flex items-baseline gap-2">
+                                                            <p className="text-[30px] font-extrabold uppercase leading-tight sm:text-[22px]">{option.name}</p>
+                                                            {index === 0 ? (
+                                                                <span className="whitespace-nowrap text-sm text-[#14b6bf]">Dưới 12 tuổi - Under 12</span>
+                                                            ) : null}
+                                                        </div>
+                                                        <p className="text-[20px] text-black/75 sm:text-base">{option.subtitle}</p>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => addServiceToCart(option.id)}
+                                                            className="mt-1 rounded-lg bg-[#ff6a36] px-3 py-1 text-[11px] font-semibold text-white hover:bg-[#f45c28]"
+                                                        >
+                                                            Thêm vào giỏ
+                                                        </button>
+                                                    </div>
+                                                    <div className="border-l border-black/35 px-2 py-2 text-center">
+                                                        <p className="text-[33px] font-extrabold leading-none sm:text-[28px]">{option.duration?.toUpperCase()}</p>
+                                                        <p className="mt-1 text-[20px] text-black/80 sm:text-base">
+                                                            {option.duration === "30 phút" ? "30 Minutes" : "40 Minutes"}
+                                                        </p>
+                                                    </div>
+                                                    <div className="border-l border-black/35 px-2 py-2">
+                                                        <div className="grid grid-cols-2 gap-2 text-center">
+                                                            <div>
+                                                                <p className="text-[40px] font-extrabold leading-none text-[#14b6bf] sm:text-[34px]">
+                                                                    {formatVnd(option.price).replace("₫", "đ")}
+                                                                </p>
+                                                            </div>
+                                                            <div className="border-l border-black/35 pl-2">
+                                                                <p className="text-[22px] font-bold leading-none text-[#d4866d] line-through sm:text-lg">
+                                                                    {option.compareAtPrice ? formatVnd(option.compareAtPrice).replace("₫", "đ") : ""}
+                                                                </p>
+                                                                <p className="mt-1 text-[40px] font-extrabold leading-none text-[#f7941d] sm:text-[34px]">
+                                                                    {option.listedPrice ? formatVnd(option.listedPrice).replace("₫", "đ") : ""}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </article>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </section>
                             </div>
                             <button
                                 type="button"
