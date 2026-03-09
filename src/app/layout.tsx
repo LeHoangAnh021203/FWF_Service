@@ -14,9 +14,9 @@ const _playfairDisplay = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "Service_FWF | Curated Collection",
-  description: "An immersive art gallery experience with dynamic ambient backgrounds",
-  generator: "v0.app",
+  title: "Service_FWF ",
+  description: "All services of Face Wash Fox.",
+  generator: "IT Department",
   icons: {
     icon: [
       {

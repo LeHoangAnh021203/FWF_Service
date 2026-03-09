@@ -75,11 +75,11 @@ export default function VoucherSection() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4">
           {voucherCards.map((voucher, index) => (
             <div
               key={voucher.id}
-              className="group relative aspect-[2986/2340] overflow-hidden rounded-3xl bg-[#f4dcc2] shadow-sm"
+              className="group relative aspect-[2986/2340] min-w-[84%] snap-center overflow-hidden rounded-3xl bg-[#f4dcc2] shadow-sm sm:min-w-[68%] md:min-w-0"
             >
               <Image
                 src={voucher.image}
@@ -91,7 +91,7 @@ export default function VoucherSection() {
               />
 
                             <div className="pointer-events-none absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                            <div className="absolute inset-x-3 bottom-3 translate-y-0 rounded-2xl bg-black/75 p-2 text-white opacity-100 transition-all duration-300 md:translate-y-4 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100">
+                            <div className="pointer-events-none absolute inset-x-3 bottom-3 translate-y-4 rounded-2xl bg-black/75 p-2 text-white opacity-0 transition-all duration-300 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100">
                                 <div className="mb-2 flex items-center justify-between">
                                     <p className="text-xs font-semibold text-[#ffb699]">{formatVnd(voucher.price)}</p>
                                     <div className="flex items-center gap-1 rounded-full bg-white/10 px-1 py-1">

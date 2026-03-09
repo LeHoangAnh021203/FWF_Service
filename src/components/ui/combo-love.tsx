@@ -107,11 +107,11 @@ export default function ComboLove() {
           <p className="mt-2 text-xl font-medium md:text-4xl">Most Popular Packages</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-3">
           {comboItems.map((item, index) => (
             <article
               key={`${item.image}-${index}`}
-              className="group overflow-hidden rounded-[24px] bg-white p-2 shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
+              className="group min-w-[84%] snap-center overflow-hidden rounded-[24px] bg-white p-2 shadow-[0_8px_20px_rgba(0,0,0,0.12)] sm:min-w-[68%] md:min-w-0"
             >
               <div className="relative aspect-square overflow-hidden rounded-[18px] bg-[#f5f5f5]">
                 <Image
