@@ -61,36 +61,7 @@ const comboItems = [
     listedPrice: 999000,
     oldPrice: 1519000,
   },
-  {
-    serviceId: "popular-7",
-    image: "/combo/cb7.png",
-    title: "Sạch sâu và Chăm sóc da mụn",
-    description: "Liệu trình dịu nhẹ dành cho da dầu mụn",
-    foxiePrice: 579000,
-    listedPrice: 809000,
-    oldPrice: 1779000,
-    liked: true,
-  },
-  {
-    serviceId: "popular-8",
-    image: "/combo/cb8.png",
-    title: "Sạch sâu + Làm dịu da nhạy cảm",
-    description: "Tập trung giảm đỏ, giảm kích ứng",
-    foxiePrice: 599000,
-    listedPrice: 829000,
-    oldPrice: 1349000,
-    liked: true,
-  },
-  {
-    serviceId: "popular-9",
-    image: "/combo/cb9.png",
-    title: "Sạch sâu + Cấp ẩm + Sáng da + Chăm sóc mắt",
-    description: "Gói premium cho da sáng khỏe toàn diện",
-    foxiePrice: 959000,
-    listedPrice: 1189000,
-    oldPrice: 1869000,
-    liked: true,
-  },
+  
 ];
 
 const formatPrice = (value: number) => `${value.toLocaleString("en-US")}đ`;

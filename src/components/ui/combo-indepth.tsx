@@ -35,43 +35,43 @@ const comboIndepthItems: ComboIndepthItem[] = [
     listedPrice: 1490000,
     oldPrice: 2990000,
   },
-  {
-    serviceId: "deep-3",
-    image: "/Intensive/Peel da.png",
-    title: "Peel da dịu nhẹ",
-    subtitle: "Lumi Peel PRO",
-    foxiePrice: 2290000,
-    listedPrice: 2990000,
-    oldPrice: 5490000,
-  },
-  {
-    serviceId: "deep-4",
-    image: "/Intensive/ADAPT BANNER-17.png",
-    title: "Vi điểm dưỡng sáng Glow Calming PRO",
-    subtitle: "Glow Calming Therapy PRO",
-    foxiePrice: 2290000,
-    listedPrice: 2990000,
-    oldPrice: 4990000,
-  },
-  {
-    serviceId: "deep-5",
-    image: "/Intensive/Vi diêm PDRN.png",
-    title: "Vi điểm phục hồi PDRN Concentrate",
-    subtitle: "PDRN Concentrate Revitalize PRO",
-    foxiePrice: 2290000,
-    listedPrice: 2990000,
-    oldPrice: 5990000,
-    liked: true,
-  },
-  {
-    serviceId: "deep-6",
-    image: "/Intensive/ADAPT BANNER-10.png",
-    title: "Vi điểm nâng cao Hyal Power Boost PRO",
-    subtitle: "Hyal Power Boost PRO",
-    foxiePrice: 999000,
-    listedPrice: 1590000,
-    oldPrice: 2749000,
-  },
+  // {
+  //   serviceId: "deep-3",
+  //   image: "/Intensive/Peel da.png",
+  //   title: "Peel da dịu nhẹ",
+  //   subtitle: "Lumi Peel PRO",
+  //   foxiePrice: 2290000,
+  //   listedPrice: 2990000,
+  //   oldPrice: 5490000,
+  // },
+  // {
+  //   serviceId: "deep-4",
+  //   image: "/Intensive/ADAPT BANNER-17.png",
+  //   title: "Vi điểm dưỡng sáng Glow Calming PRO",
+  //   subtitle: "Glow Calming Therapy PRO",
+  //   foxiePrice: 2290000,
+  //   listedPrice: 2990000,
+  //   oldPrice: 4990000,
+  // },
+  // {
+  //   serviceId: "deep-5",
+  //   image: "/Intensive/Vi diêm PDRN.png",
+  //   title: "Vi điểm phục hồi PDRN Concentrate",
+  //   subtitle: "PDRN Concentrate Revitalize PRO",
+  //   foxiePrice: 2290000,
+  //   listedPrice: 2990000,
+  //   oldPrice: 5990000,
+  //   liked: true,
+  // },
+  // {
+  //   serviceId: "deep-6",
+  //   image: "/Intensive/ADAPT BANNER-10.png",
+  //   title: "Vi điểm nâng cao Hyal Power Boost PRO",
+  //   subtitle: "Hyal Power Boost PRO",
+  //   foxiePrice: 999000,
+  //   listedPrice: 1590000,
+  //   oldPrice: 2749000,
+  // },
 ];
 
 const formatPrice = (value: number) => `${value.toLocaleString("en-US")}đ`;
@@ -109,7 +109,7 @@ export default function ComboIndepth() {
     <section className="w-full bg-[#f7941d] px-4 pb-8 pt-2 md:px-8 md:pb-10">
       <div className="mx-auto w-full max-w-[1320px]">
         <div className="mb-4 flex items-end gap-3 text-white md:mb-6">
-          <h2 className="text-3xl font-extrabold uppercase leading-none md:text-5xl">Combo chuyên sâu</h2>
+          <h2 className="text-3xl font-extrabold uppercase leading-none md:text-5xl pt-5">Combo chuyên sâu</h2>
           <p className="pb-1 text-2xl font-medium md:text-4xl">Intensive packages</p>
         </div>
 
@@ -117,7 +117,7 @@ export default function ComboIndepth() {
           {comboIndepthItems.map((item, index) => (
             <article
               key={`${item.title}-${index}`}
-              className="group overflow-hidden rounded-[22px] bg-white p-2 shadow-[0_8px_20px_rgba(0,0,0,0.12)] md:rounded-[24px]"
+              className="group overflow-hidden rounded-[22px] bg-white p-1 shadow-[0_8px_20px_rgba(0,0,0,0.12)] md:rounded-[24px]"
             >
               <div className="relative aspect-square overflow-hidden rounded-[18px] bg-[#f5f5f5]">
                 <Image

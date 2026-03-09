@@ -6,6 +6,8 @@ import { NavigationDots } from "./navigation-dots"
 import { useSliderNavigation } from "./hooks/use-slider-navigation"
 import { useSliderDrag } from "./hooks/use-slider-drag"
 import { useIsMobile } from "./hooks/use-mobile"
+import useSharedCart from "./hooks/use-shared-cart"
+import { extractColors, generateStablePalette } from "./lib/color-extractor"
 
 type ServiceTab = "extra" | "basic"
 type ExtraServiceCardData = {
@@ -29,6 +31,7 @@ const EXTRA_SERVICE_CARDS: ExtraServiceCardData[] = [
 type BasicServiceCardData = {
     id: string
     order: number
+    image: string
     name: string
     subtitle: string
     durationVi: string
@@ -39,10 +42,15 @@ type BasicServiceCardData = {
     under12Note?: string
 }
 
+const isBasicServiceCard = (
+    item: BasicServiceCardData | ExtraServiceCardData | undefined
+): item is BasicServiceCardData => Boolean(item && typeof (item as BasicServiceCardData).image === "string")
+
 const BASIC_SERVICE_CARDS: BasicServiceCardData[] = [
     {
         id: "basic-1",
         order: 1,
+        image: "/Dichvucb/cb1.png",
         name: "Rửa mặt công nghệ Hydra Facial",
         subtitle: "Aqua Peel Cleanse",
         durationVi: "30 PHÚT",
@@ -55,6 +63,7 @@ const BASIC_SERVICE_CARDS: BasicServiceCardData[] = [
     {
         id: "basic-2",
         order: 2,
+        image: "/Dichvucb/cb2.png",
         name: "Làm sạch sâu và cải thiện lỗ chân lông",
         subtitle: "Deep Cleanse",
         durationVi: "40 PHÚT",
@@ -66,6 +75,7 @@ const BASIC_SERVICE_CARDS: BasicServiceCardData[] = [
     {
         id: "basic-3",
         order: 3,
+        image: "/Dichvucb/cb3.png",
         name: "Cấp ẩm, căng bóng và tràn đầy sức sống",
         subtitle: "Cryo Cleanse",
         durationVi: "40 PHÚT",
@@ -77,6 +87,7 @@ const BASIC_SERVICE_CARDS: BasicServiceCardData[] = [
     {
         id: "basic-4",
         order: 4,
+        image: "/Dichvucb/cb4.png",
         name: "Làm sáng và cải thiện màu da, giảm đốm nâu",
         subtitle: "Lumiglow Cleanse",
         durationVi: "40 PHÚT",
@@ -88,6 +99,7 @@ const BASIC_SERVICE_CARDS: BasicServiceCardData[] = [
     {
         id: "basic-5",
         order: 5,
+        image: "/Dichvucb/cb5.png",
         name: "Làm tăng đàn hồi, săn chắc và thư giãn da",
         subtitle: "Gymming Cleanse",
         durationVi: "40 PHÚT",
@@ -99,6 +111,7 @@ const BASIC_SERVICE_CARDS: BasicServiceCardData[] = [
     {
         id: "basic-6",
         order: 6,
+        image: "/Dichvucb/cb6.png",
         name: "Chăm sóc da mắt và làm giảm nếp nhăn mắt",
         subtitle: "Eye-revive Cleanse",
         durationVi: "40 PHÚT",
@@ -114,7 +127,9 @@ const formatPrice = (value: number) => `${value.toLocaleString("vi-VN")}đ`
 export function ArtGallerySlider() {
     const sliderRef = useRef<HTMLDivElement>(null)
     const isMobile = useIsMobile()
+    const { addItem } = useSharedCart()
     const [activeTab, setActiveTab] = useState<ServiceTab>("extra")
+    const [colorCache, setColorCache] = useState<Record<string, string[]>>({})
 
     const totalSlides = activeTab === "basic" ? BASIC_SERVICE_CARDS.length : EXTRA_SERVICE_CARDS.length
 
@@ -132,7 +147,40 @@ export function ArtGallerySlider() {
         goToSlide(0)
     }, [activeTab, goToSlide])
 
-    const currentColors = ["#f7931a", "#ff6a36", "#ffd28a"]
+    const activeItem = useMemo(
+        () => (activeTab === "basic" ? BASIC_SERVICE_CARDS[currentIndex] : EXTRA_SERVICE_CARDS[currentIndex]),
+        [activeTab, currentIndex]
+    )
+
+    const colorKey = `${activeTab}-${activeItem?.id ?? "default"}`
+
+    useEffect(() => {
+        if (!activeItem || colorCache[colorKey]) return
+
+        let cancelled = false
+        const sourceImage = isBasicServiceCard(activeItem) ? activeItem.image : undefined
+
+        if (!sourceImage) {
+            const palette = generateStablePalette(activeItem.id + activeItem.name)
+            setColorCache((prev) => (prev[colorKey] ? prev : { ...prev, [colorKey]: palette }))
+            return
+        }
+
+        extractColors(sourceImage).then((palette) => {
+            if (cancelled) return
+            setColorCache((prev) => (prev[colorKey] ? prev : { ...prev, [colorKey]: palette }))
+        })
+
+        return () => {
+            cancelled = true
+        }
+    }, [activeItem, activeTab, colorCache, colorKey])
+
+    const currentColors =
+        colorCache[colorKey] ??
+        (isBasicServiceCard(activeItem)
+            ? generateStablePalette(activeItem.image)
+            : ["#f7931a", "#ff6a36", "#ffd28a"])
     const slideWidth = isMobile ? 336 : 396
     const [c1, c2, c3] = currentColors
 
@@ -168,18 +216,16 @@ export function ArtGallerySlider() {
                         <button
                             type="button"
                             onClick={() => setActiveTab("extra")}
-                            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                                activeTab === "extra" ? "bg-[#ff6a36] text-white" : "text-white/70 hover:text-white"
-                            }`}
+                            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === "extra" ? "bg-[#ff6a36] text-white" : "text-white/70 hover:text-white"
+                                }`}
                         >
                             Dịch vụ cộng thêm
                         </button>
                         <button
                             type="button"
                             onClick={() => setActiveTab("basic")}
-                            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                                activeTab === "basic" ? "bg-[#ff6a36] text-white" : "text-white/70 hover:text-white"
-                            }`}
+                            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === "basic" ? "bg-[#ff6a36] text-white" : "text-white/70 hover:text-white"
+                                }`}
                         >
                             Dịch vụ cơ bản
                         </button>
@@ -225,6 +271,15 @@ export function ArtGallerySlider() {
                                 dragOffset={dragX}
                                 index={index}
                                 currentIndex={currentIndex}
+                                onAddToCart={() =>
+                                    addItem({
+                                        id: `service-${item.id}`,
+                                        name: item.name,
+                                        price: item.foxiePrice,
+                                        quantity: 1,
+                                        type: "service",
+                                    })
+                                }
                             />
                         ))
                         : EXTRA_SERVICE_CARDS.map((item, index) => (
@@ -318,15 +373,16 @@ interface BasicServiceInfoCardProps {
     dragOffset: number
     index: number
     currentIndex: number
+    onAddToCart: () => void
 }
 
-function BasicServiceInfoCard({ item, isActive, dragOffset, index, currentIndex }: BasicServiceInfoCardProps) {
+function BasicServiceInfoCard({ item, isActive, dragOffset, index, currentIndex, onAddToCart }: BasicServiceInfoCardProps) {
     const distance = index - currentIndex
     const parallaxOffset = dragOffset * (0.1 * (distance + 1))
 
     return (
         <motion.article
-            className="relative flex-shrink-0"
+            className="group relative flex-shrink-0 overflow-hidden rounded-[24px]"
             animate={{
                 scale: isActive ? 1 : 0.88,
                 opacity: isActive ? 1 : 0.62,
@@ -335,44 +391,47 @@ function BasicServiceInfoCard({ item, isActive, dragOffset, index, currentIndex 
             transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
             style={{ x: parallaxOffset }}
         >
-            <div className="w-[300px] rounded-[24px] border border-white/60 bg-[#ececec] p-4 shadow-[0_14px_35px_rgba(0,0,0,0.28)] md:w-[332px]">
-                <div className="mb-3 flex items-start gap-3 border-b border-black/25 pb-2">
-                    <div className="rounded-lg border-2 border-[#f7931a] px-2 py-0.5 text-lg font-extrabold text-[#f7931a]">
-                        {item.order}
-                    </div>
-                    <div className="min-w-0">
-                        <h3 className="text-base font-extrabold uppercase leading-tight text-[#202020]">{item.name}</h3>
-                        {item.under12Note ? (
-                            <p className="text-xs font-semibold text-[#2fb8c0]">{item.under12Note}</p>
-                        ) : null}
-                        <p className="text-sm text-black/75">{item.subtitle}</p>
-                    </div>
-                </div>
+            <div className="relative w-[300px] md:w-[332px]">
+                <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full rounded-[24px] shadow-[0_14px_35px_rgba(0,0,0,0.28)] transition-transform duration-500 group-hover:scale-[1.02]"
+                    loading="lazy"
+                    draggable={false}
+                />
+                <div className="absolute inset-0 rounded-[24px] bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-6 p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
 
-                <div className="grid grid-cols-[0.9fr_1.1fr] gap-3">
-                    <div className="border-r border-black/25 pr-3 text-center">
-                        <p className="text-xl font-extrabold leading-none">{item.durationVi}</p>
-                        <p className="text-sm text-black/80">{item.durationEn}</p>
+                    <div className="flex items-center justify-end gap-2">
+                        <button
+                            type="button"
+                            className="pointer-events-auto rounded-full border border-white/45 bg-white/12 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20 md:text-sm"
+                        >
+                            Chi tiết
+                        </button>
+                        <button
+                            type="button"
+                            aria-label="Them vao gio hang"
+                            onClick={onAddToCart}
+                            className="pointer-events-auto grid h-9 w-9 place-items-center rounded-full border border-white/45 bg-[#ff6a36] text-white transition hover:bg-[#f45c28] md:h-10 md:w-10"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="h-4 w-4 md:h-5 md:w-5"
+                            >
+                                <circle cx="9" cy="20" r="1" />
+                                <circle cx="17" cy="20" r="1" />
+                                <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H7" />
+                            </svg>
+                        </button>
                     </div>
-                    <div className="min-w-0">
-                        <div className="mb-1 text-right text-xs font-bold leading-none text-[#d1937a] line-through md:text-sm">
-                            {formatPrice(item.comparePrice)}
-                        </div>
-                        <div className="grid grid-cols-2 gap-1.5">
-                            <div className="min-w-0">
-                                <p className="text-[11px] font-bold text-black/80 md:text-xs">Giá Foxie</p>
-                                <p className="whitespace-nowrap text-[15px] font-extrabold leading-none text-[#19b6bf] md:text-[12px]">
-                                    {formatPrice(item.foxiePrice)}
-                                </p>
-                            </div>
-                            <div className="min-w-0 text-right">
-                                <p className="text-[11px] font-bold text-black/80 md:text-xs">Giá niêm yết</p>
-                                <p className="whitespace-nowrap text-[15px] font-extrabold leading-none text-[#f7941d] md:text-[12px]">
-                                    {formatPrice(item.listedPrice)}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </motion.article>
