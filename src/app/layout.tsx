@@ -14,7 +14,7 @@ const _playfairDisplay = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "Service_FWF ",
+  title: "Dịch vụ của Face Wash Fox - Cáo Rửa Mặt",
   description: "All services of Face Wash Fox.",
   generator: "IT Department",
   icons: {
