@@ -27,7 +27,7 @@ export default function HomePage() {
       <div className=" w-screen overflow-hidden bg-black">
         <ServiceStandard />
       </div>
-      <FloatingCart />
+      {/* <FloatingCart /> */}
       {/* <FloatingAppMenu /> */}
     </>
   );

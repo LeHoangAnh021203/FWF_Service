@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import CommingSoon from "./ui/comming-soon";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { branches } from "./data/branches";
 
 const centerImage =
   "https://facewashfox.com/wp-content/uploads/2023/12/web-img-03-1-1.png";
@@ -67,6 +67,34 @@ type StandardItem = {
   color: string;
 };
 
+type BranchDistance = {
+  id: number;
+  distanceKm: number;
+};
+
+function toRad(value: number) {
+  return (value * Math.PI) / 180;
+}
+
+function getDistanceKm(
+  fromLat: number,
+  fromLng: number,
+  toLat: number,
+  toLng: number,
+) {
+  const earthRadiusKm = 6371;
+  const dLat = toRad(toLat - fromLat);
+  const dLng = toRad(toLng - fromLng);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(fromLat)) *
+      Math.cos(toRad(toLat)) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
+}
+
 function StandardRow({
   item,
   reverse = false,
@@ -86,7 +114,152 @@ function StandardRow({
 }
 
 export default function ServiceStandard() {
-  const [isCommingSoonOpen, setIsCommingSoonOpen] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [note, setNote] = useState("");
+  const [selectedBranchId, setSelectedBranchId] = useState<number>(
+    branches[0]?.id ?? 0,
+  );
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [submitSuccess, setSubmitSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [distanceByBranchId, setDistanceByBranchId] = useState<
+    Record<number, number>
+  >({});
+
+  const nearestBranch = useMemo(() => {
+    const distances: BranchDistance[] = Object.entries(distanceByBranchId).map(
+      ([id, distanceKm]) => ({
+        id: Number(id),
+        distanceKm,
+      }),
+    );
+    distances.sort((a, b) => a.distanceKm - b.distanceKm);
+    return distances[0];
+  }, [distanceByBranchId]);
+
+  const selectedBranch = useMemo(
+    () => branches.find((branch) => branch.id === selectedBranchId) ?? null,
+    [selectedBranchId],
+  );
+
+  const handleDetectNearestBranch = useCallback(() => {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      setLocationError("Thiết bị không hỗ trợ định vị vị trí.");
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationError("");
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const nextDistances = branches.reduce<Record<number, number>>(
+          (acc, branch) => {
+            acc[branch.id] = getDistanceKm(
+              latitude,
+              longitude,
+              branch.lat,
+              branch.lng,
+            );
+            return acc;
+          },
+          {},
+        );
+        const nearest = Object.entries(nextDistances).sort(
+          (a, b) => a[1] - b[1],
+        )[0];
+
+        setDistanceByBranchId(nextDistances);
+        if (nearest) {
+          setSelectedBranchId(Number(nearest[0]));
+        }
+        setIsLocating(false);
+      },
+      (error) => {
+        const errorMessageByCode: Record<number, string> = {
+          1: "Bạn chưa cấp quyền truy cập vị trí.",
+          2: "Không thể xác định vị trí hiện tại.",
+          3: "Hết thời gian lấy vị trí. Vui lòng thử lại.",
+        };
+        setLocationError(
+          errorMessageByCode[error.code] ?? "Định vị thất bại. Vui lòng thử lại.",
+        );
+        setIsLocating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000,
+      },
+    );
+  }, []);
+
+  useEffect(() => {
+    handleDetectNearestBranch();
+  }, [handleDetectNearestBranch]);
+
+  const handleSubmitBooking = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitError("");
+    setSubmitSuccess("");
+
+    if (!fullName.trim()) {
+      setSubmitError("Vui lòng nhập họ và tên.");
+      return;
+    }
+
+    if (!phone.trim()) {
+      setSubmitError("Vui lòng nhập số điện thoại.");
+      return;
+    }
+
+    if (!selectedBranch) {
+      setSubmitError("Vui lòng chọn chi nhánh.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/booking/service", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: fullName.trim(),
+          phone: phone.trim(),
+          email: email.trim(),
+          note: note.trim(),
+          branchName: selectedBranch.name,
+          branchCity: selectedBranch.city,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(data?.error ?? "Không thể gửi đăng ký lúc này.");
+      }
+
+      setSubmitSuccess("Đặt lịch thành công. Chúng tôi sẽ liên hệ bạn sớm.");
+      setFullName("");
+      setPhone("");
+      setEmail("");
+      setNote("");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Đã có lỗi xảy ra. Vui lòng thử lại.";
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <section className="w-full bg-[#f3f3f3] px-4 py-14 md:px-8 md:py-20">
@@ -124,31 +297,150 @@ export default function ServiceStandard() {
           </div>
         </div>
 
-        <div className="mx-auto mt-12 w-full max-w-[920px] rounded-[28px] bg-white p-6 shadow-[0_20px_60px_rgba(0,0,0,0.15)] md:mt-16 md:p-10">
-          <h3 className="text-center text-[clamp(1.5rem,2vw,2.2rem)] font-extrabold uppercase text-[#151515]">
-            Đặt Lịch Liền Tay, Nhận Ngay Ưu Đãi
-          </h3>
-          <div className="mt-6 flex flex-col gap-3 md:mt-8 md:flex-row">
-            <input
-              type="tel"
-              placeholder="Nhập SĐT để đặt lịch"
-              className="h-14 flex-1 rounded-md border border-transparent bg-[#f2f2f2] px-5 text-[1.05rem] text-[#222] outline-none placeholder:text-[#9a9a9a] focus:border-[#ff6936]/30"
-            />
-            <button
-              type="button"
-              onClick={() => setIsCommingSoonOpen(true)}
-              className="h-14 rounded-md bg-[#ff6936] px-10 text-[1.05rem] font-bold text-white transition-colors hover:bg-[#f45c28]"
+        <div className="mx-auto mt-12 w-full max-w-[920px] rounded-[28px] bg-[#f4eef5] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.12)] md:mt-16 md:p-10">
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-[#f04b9a] to-[#7c3aed] text-white">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-11 w-11"
+              aria-hidden="true"
             >
-              Đặt Lịch
-            </button>
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M16 3v4M8 3v4M3 10h18" />
+            </svg>
           </div>
+
+          <h3 className="mt-6 text-center text-[clamp(2rem,3.4vw,3.3rem)] font-extrabold text-[#0f172a]">
+            Đặt lịch tư vấn miễn phí
+          </h3>
+          <p className="mt-2 text-center text-[clamp(1.1rem,1.8vw,1.8rem)] text-[#4b5563]">
+            Điền thông tin để nhận tư vấn từ chuyên gia
+          </p>
+
+          <form className="mt-8 space-y-6 md:mt-10" onSubmit={handleSubmitBooking}>
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label htmlFor="booking-name" className="mb-2 block text-[1.05rem] font-semibold text-[#374151]">
+                  Họ và tên *
+                </label>
+                <input
+                  id="booking-name"
+                  type="text"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                  placeholder="Nhập họ và tên"
+                  required
+                  className="h-14 w-full rounded-[14px] border border-[#c7cdd5] bg-[#f1dce9] px-5 text-[1.05rem] text-[#111827] outline-none placeholder:text-[#8b96a5] focus:border-[#a855f7]/50 md:text-[1.15rem]"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="booking-phone" className="mb-2 block text-[1.05rem] font-semibold text-[#374151]">
+                  Số điện thoại *
+                </label>
+                <input
+                  id="booking-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="Nhập số điện thoại"
+                  required
+                  className="h-14 w-full rounded-[14px] border border-[#c7cdd5] bg-[#f1dce9] px-5 text-[1.05rem] text-[#111827] outline-none placeholder:text-[#8b96a5] focus:border-[#a855f7]/50 md:text-[1.15rem]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="booking-email" className="mb-2 block text-[1.05rem] font-semibold text-[#374151]">
+                Email
+              </label>
+              <input
+                id="booking-email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Nhập email"
+                className="h-14 w-full rounded-[14px] border border-[#c7cdd5] bg-[#f1dce9] px-5 text-[1.05rem] text-[#111827] outline-none placeholder:text-[#8b96a5] focus:border-[#a855f7]/50 md:text-[1.15rem]"
+              />
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <label htmlFor="booking-branch" className="text-[1.05rem] font-semibold text-[#374151]">
+                  Chi nhánh gần nhất
+                </label>
+                <button
+                  type="button"
+                  onClick={handleDetectNearestBranch}
+                  className="text-[1.05rem] text-[#0369a1] underline underline-offset-2"
+                >
+                  {isLocating ? "Đang dò vị trí..." : "Dò vị trí để gợi ý"}
+                </button>
+              </div>
+              <select
+                id="booking-branch"
+                className="h-14 w-full rounded-[14px] border border-[#c7cdd5] bg-[#f1dce9] px-5 text-[1.05rem] text-[#111827] outline-none focus:border-[#a855f7]/50 md:text-[1.15rem]"
+                value={selectedBranchId}
+                onChange={(event) => setSelectedBranchId(Number(event.target.value))}
+              >
+                {branches.map((branch) => {
+                  const distance = distanceByBranchId[branch.id];
+                  return (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                      {typeof distance === "number"
+                        ? ` — ${distance.toFixed(1)} km`
+                        : ""}
+                    </option>
+                  );
+                })}
+              </select>
+              {locationError ? (
+                <p className="mt-2 text-[0.95rem] text-[#dc2626]">{locationError}</p>
+              ) : null}
+              {nearestBranch ? (
+                <p className="mt-2 text-[0.95rem] text-[#0f766e]">
+                  Đã gợi ý chi nhánh gần nhất ({nearestBranch.distanceKm.toFixed(1)} km).
+                </p>
+              ) : null}
+            </div>
+
+            <div>
+              <label htmlFor="booking-note" className="mb-2 block text-[1.05rem] font-semibold text-[#374151]">
+                Ghi chú
+              </label>
+              <textarea
+                id="booking-note"
+                rows={4}
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder="Mô tả tình trạng da hoặc yêu cầu đặc biệt..."
+                className="w-full rounded-[14px] border border-[#c7cdd5] bg-[#f1dce9] px-5 py-4 text-[1.05rem] text-[#111827] outline-none placeholder:text-[#8b96a5] focus:border-[#a855f7]/50 md:text-[1.15rem]"
+              />
+            </div>
+
+            {submitError ? (
+              <p className="text-[0.95rem] text-[#dc2626]">{submitError}</p>
+            ) : null}
+            {submitSuccess ? (
+              <p className="text-[0.95rem] text-[#0f766e]">{submitSuccess}</p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-16 w-full rounded-[14px] bg-gradient-to-r from-[#f04b9a] to-[#7c3aed] px-8 text-[1.35rem] font-extrabold text-white transition-opacity hover:opacity-90 md:text-[1.65rem]"
+            >
+              {isSubmitting
+                ? "Đang gửi thông tin..."
+                : "Đặt lịch ngay - Miễn phí tư vấn"}
+            </button>
+          </form>
         </div>
       </div>
-
-      <CommingSoon
-        open={isCommingSoonOpen}
-        onClose={() => setIsCommingSoonOpen(false)}
-      />
     </section>
   );
 }
