@@ -128,7 +128,7 @@ export function ArtGallerySlider() {
     const sliderRef = useRef<HTMLDivElement>(null)
     const isMobile = useIsMobile()
     const { addItem } = useSharedCart()
-    const [activeTab, setActiveTab] = useState<ServiceTab>("extra")
+    const [activeTab, setActiveTab] = useState<ServiceTab>("basic")
     const [colorCache, setColorCache] = useState<Record<string, string[]>>({})
 
     const totalSlides = activeTab === "basic" ? BASIC_SERVICE_CARDS.length : EXTRA_SERVICE_CARDS.length
@@ -215,19 +215,19 @@ export function ArtGallerySlider() {
                     <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 backdrop-blur-md">
                         <button
                             type="button"
-                            onClick={() => setActiveTab("extra")}
-                            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === "extra" ? "bg-[#ff6a36] text-white" : "text-white/70 hover:text-white"
-                                }`}
-                        >
-                            Dịch vụ cộng thêm
-                        </button>
-                        <button
-                            type="button"
                             onClick={() => setActiveTab("basic")}
                             className={`rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === "basic" ? "bg-[#ff6a36] text-white" : "text-white/70 hover:text-white"
                                 }`}
                         >
                             Dịch vụ cơ bản
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab("extra")}
+                            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === "extra" ? "bg-[#ff6a36] text-white" : "text-white/70 hover:text-white"
+                                }`}
+                        >
+                            Dịch vụ cộng thêm
                         </button>
                     </div>
                 </motion.div>
