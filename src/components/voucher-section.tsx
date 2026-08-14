@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import useSharedCart from "./hooks/use-shared-cart";
 
 type VoucherCard = {
@@ -10,17 +10,18 @@ type VoucherCard = {
     name: string;
     price: number;
     image: string;
+    wide?: boolean;
 };
 
 const voucherCards: VoucherCard[] = [
-    { id: "foxie-crown", name: "Foxie Crown 100 triệu", price: 100000000, image: "/voucher/Asset 2@4x.png" },
-    { id: "foxie-crystal", name: "Foxie Crystal 80 triệu", price: 80000000, image: "/voucher/Asset 1@4x.png" },
-    { id: "foxie-platinum", name: "Foxie Platinum 50 triệu", price: 50000000, image: "/voucher/Asset 3@4x.png" },
-    { id: "foxie-diamond", name: "Foxie Diamond 30 triệu", price: 30000000, image: "/voucher/Asset 4@4x.png" },
-    { id: "foxie-gold", name: "Foxie Gold 20 triệu", price: 20000000, image: "/voucher/Asset 8@4x.png" },
-    { id: "foxie-silver", name: "Foxie Silver 10 triệu", price: 10000000, image: "/voucher/Asset 7@4x.png" },
-    { id: "foxie-bronze", name: "Foxie Bronze 5 triệu", price: 5000000, image: "/voucher/Asset 6@4x.png" },
-    { id: "foxie-iron", name: "Foxie Iron 1.5 triệu", price: 3000000, image: "/voucher/Asset 5@4x.png" },
+    { id: "foxie-crown", name: "Foxie Crown 100 triệu", price: 100000000, image: "/voucher/bang-the-foxie/foxie-8-crown.png", wide: true },
+    { id: "foxie-crystal", name: "Foxie Crystal 80 triệu", price: 80000000, image: "/voucher/bang-the-foxie/foxie-7-crystal.png" },
+    { id: "foxie-platinum", name: "Foxie Platinum 50 triệu", price: 50000000, image: "/voucher/bang-the-foxie/foxie-6-platinum.png" },
+    { id: "foxie-diamond", name: "Foxie Diamond 30 triệu", price: 30000000, image: "/voucher/bang-the-foxie/foxie-5-diamond.png" },
+    { id: "foxie-gold", name: "Foxie Gold 20 triệu", price: 20000000, image: "/voucher/bang-the-foxie/foxie-4-gold.png" },
+    { id: "foxie-silver", name: "Foxie Silver 10 triệu", price: 10000000, image: "/voucher/bang-the-foxie/foxie-3-silver.png" },
+    { id: "foxie-bronze", name: "Foxie Bronze 5 triệu", price: 5000000, image: "/voucher/bang-the-foxie/foxie-2-bronze.png" },
+    { id: "foxie-iron", name: "Foxie Iron 3 triệu", price: 3000000, image: "/voucher/bang-the-foxie/foxie-1-iron.png" },
 ];
 
 const formatVnd = (value: number) =>
@@ -30,15 +31,6 @@ export default function VoucherSection() {
     const { addItem } = useSharedCart();
     const [quantities, setQuantities] = useState<Record<string, number>>(
         Object.fromEntries(voucherCards.map((voucher) => [voucher.id, 1]))
-    );
-
-    const totalPreview = useMemo(
-        () =>
-            voucherCards.reduce((sum, voucher) => {
-                const quantity = quantities[voucher.id] ?? 1;
-                return sum + voucher.price * quantity;
-            }, 0),
-        [quantities]
     );
 
     const updateQuantity = (id: string, delta: number) => {
@@ -79,7 +71,7 @@ export default function VoucherSection() {
           {voucherCards.map((voucher, index) => (
             <div
               key={voucher.id}
-              className="group relative aspect-[2986/2340] min-w-[84%] snap-center overflow-hidden rounded-3xl bg-[#f4dcc2] shadow-sm sm:min-w-[68%] md:min-w-0"
+              className={`group relative min-w-[84%] snap-center overflow-hidden rounded-3xl bg-[#f4dcc2] shadow-sm sm:min-w-[68%] md:min-w-0 ${voucher.wide ? "aspect-[517/163] md:col-span-2" : "aspect-[2520/1703]"}`}
             >
               <Image
                 src={voucher.image}
